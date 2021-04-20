@@ -112,4 +112,3 @@ fi
 #    . /etc/bash_completion
 #  fi
 #fi
-PATH=$PATH:/root/sec617/proxmark3/client
