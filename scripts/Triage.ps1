@@ -1152,7 +1152,7 @@ function function_InherentScriptingLogName
     try
     {
         $SavedLogFile = $CollectionDate + "\" + $SavedLogs
-        write-host -fore Black -back White "-----------Logging Enabled----------" 
+        write-host -fore Black -back White "-----------Logging Enabled----------"
         echo "-----------Logging Enabled----------" >> $SavedLogFile
         echo "[INFO] Starting Script on $ScriptStartDate (Date:yyyy-MM-dd)_(Time:HH-mm-ss)" >> $SavedLogFile
         try
@@ -1162,11 +1162,12 @@ function function_InherentScriptingLogName
             $StoredForensicLocation = "./" + $CollectionDate + "\"
             $StoredSelecteDrive = $SavedLogs + "_driveplan"
             $SavedVarFile = $CollectionDate + "\" + $StoredVariables
+            $SavedInitialFile = $CollectionDate + "\" + $computername + "_Initial_Collect.txt"
             $SavedVarFTKFile = $CollectionDate + "\" + $StoredVariables + "_ftk"
             $SavedTempFile = $CollectionDate + "\" + $SavedTemp
             $SavedSelectedDrive = $CollectionDate + "\" + $StoredSelecteDrive
             clear
-            function_SystemInfoGathering
+            function_Initial_Collect
         }
         catch
         {
@@ -1190,12 +1191,45 @@ function function_InherentScriptingLogName
 ##########################################################################################
 ##########################################################################################
 
+function function_Initial_Collect
+{
+    write-host -fore Black -back White "-----Gathering Initial Information-----"
+    echo "-----Gathering Initial Information-----" >> $SavedInitialFile
+    echo $string_ISLN_log >> $SavedInitialFile
+    $var_ComputerName = $env:COMPUTERNAME
+    $var_ComputerNameString = "[SYS] The Computer Name is: " + $var_ComputerName
+    echo $var_ComputerNameString >> $SavedInitialFile
+    echo "" >> $SavedInitialFile
+    write-host -fore Black -back White "-----Gathering Network State Information-----"
+    echo "-----Gathering Network State Information-----" >> $SavedInitialFile
+    echo "-----NETSTAT Output-----" >> $SavedInitialFile
+    netstat -natqo >> $SavedInitialFile
+    echo "" >> $SavedInitialFile
+    echo "-----ARP Cache Output-----" >> $SavedInitialFile
+    echo "" >> $SavedInitialFile
+    arp -a >> $SavedInitialFile
+    echo "" >> $SavedInitialFile
+    echo "-----TASKLIST Output-----" >> $SavedInitialFile
+    tasklist /v >> $SavedInitialFile
+    echo "" >> $SavedInitialFile
+    echo "-----TASKLIST/SVC Output-----" >> $SavedInitialFile
+    tasklist /svc >> $SavedInitialFile
+    echo "" >> $SavedInitialFile
+    echo "-----Service Output-----" >> $SavedInitialFile
+    get-service -Verbose | Format-List * >> $SavedInitialFile
+    function_SystemInfoGathering
+}
+
+##########################################################################################
+############################### System Fingerprinting ####################################
+##########################################################################################
+
 function function_SystemInfoGathering
 {
     write-host -fore Black -back White "-----Gathering System Information-----"
     echo "-----Gathering System Information-----" >> $SavedLogFile
     $var_ComputerName = $env:COMPUTERNAME
-    $var_ComputerNameString = "[sys] The Computer Name is: " + $var_ComputerName
+    $var_ComputerNameString = "[SYS] The Computer Name is: " + $var_ComputerName
     $var_UserDomain = $env:USERDOMAIN
     $var_LogonServer = $env:LOGONSERVER ## Local or Domain
     $var_LogonServerFix = $var_LogonServer|Where{$_ -ne ""}|ForEach{$_.Replace("\\","\")}
@@ -1529,9 +1563,15 @@ Function Function_RedLineCollectorPrompt
 }
 
 ##########################################################################################
-#################################### Hard Drive Info #####################################
+################################# Forensic Artifact Pull #################################
 ##########################################################################################
 
+## In Dev ##
+
+
+##########################################################################################
+#################################### Hard Drive Info #####################################
+##########################################################################################
 
 Function Function_Get-DiskInfoWMIC
 {
@@ -1767,12 +1807,12 @@ Function Function_Full_Disk_Collect
 {
     ForEach ($line in (get-content $SavedVarFTKFile))
     {
-        $StoredForensicDiskLocation = $StoredForensicLocation + "\Disk\" 
-        $DiskVarNumber = $line
+        $StoredForensicDiskLocation = $StoredForensicLocation + "\Disk\"
+        $DiskVarNumber = $line - 1
         $DiskCollectVar = "\\.\PHYSICALDRIVE" + $DiskVarNumber
         $DiskCollectVar
-        $StoredForensicDiskLocationStore = $StoredForensicDiskLocation + $DiskVar
-        $StoredForensicDiskLocationStoreFile = $StoredForensicDiskLocationStore + "DiskCollect_" + $DiskVar
+        $StoredForensicDiskLocationStore = $StoredForensicDiskLocation
+        $StoredForensicDiskLocationStoreFile = $StoredForensicDiskLocationStore + "DiskCollect_" + $DiskVarNumber
         try
         {
             mkdir $StoredForensicDiskLocationStore
@@ -1786,9 +1826,9 @@ Function Function_Full_Disk_Collect
 }
 
 ######################################################################
-############################## LA MER ################################
+############################### LA MER ###############################
 ######################################################################
 
 Function_Agreement
 
-########################## GREEDO SHOT FIRST #########################
+################################# FIN ################################
